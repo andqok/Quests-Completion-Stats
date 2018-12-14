@@ -3,47 +3,18 @@
     <head>
         <title>Quests Completion Stats</title>
         <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+        <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
     </head>
     <body>
-        <div id="app">
-            <table>
-                <thead>
-                    <tr>
-                        <th v-for="(item, index) in rowAlias" :key="index">{{ item }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td is="game-row"
-                            v-for="(item, index) in rowStatus"
-                            v-bind:src="item"
-                            :key="index"
-                        ></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <div id="app"></div>
     </body>
     <script>
 
-    var statusImages = {
-        SUCCESS: 'success',
-        CRASH: 'crash',
-        NO_DATA: 'no_data'
-    }
-    Vue.component('game-row', {
-        props: ['src'],
-        template: `<td>
-            <img :src="src">
-        </td>`
-    })
-
-    var app = new Vue({
-        el: '#app',
+    const Main = {
         data() {
             return {
-                'rowAlias': [],
+                'rowAlias':  [],
                 'rowStatus': [],
             }
         },
@@ -61,10 +32,71 @@
             function getFullPath(name) {
                 return `/img/${name}.jpg`
             }
+        },
+        template: `<table>
+                <thead>
+                    <tr>
+                        <th v-for="(item, index) in rowAlias" :key="index">{{ item }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td is="game-row"
+                            v-for="(item, index) in rowStatus"
+                            v-bind:src="item"
+                            :key="index"
+                        ></td>
+                    </tr>
+                </tbody>
+            </table>`
+    }
+
+    const GameInfo = {
+        props: ['src'],
+        template: '<h1>Success! {{ src }}</h1>'
+    }
+
+    var statusImages = {
+        SUCCESS: 'success',
+        CRASH: 'crash',
+        NO_DATA: 'no_data'
+    }
+
+    const routes = [
+        { 
+            path: '/', 
+            component: Main,
+            name: 'main',
+        },
+        { 
+            path: '/gameinfo', 
+            name: 'gameinfo', 
+            component: GameInfo,
+            props: true,
         }
+    ]
+
+    const router = new VueRouter({
+        routes
     })
 
+    Vue.component('game-row', {
+        props: ['src'],
+        template: `<td>
+            <router-link :to="{ name: 'gameinfo', params: { src } }">
+                <img :src="src">
+            </router-link>
+        </td>`
+    })
 
-    
+    var app = new Vue( {
+        router,
+        template: `
+        <div id="app">
+            <router-view></router-view>
+        </div>
+        `
+    } ).$mount('#app')
+
     </script>
 </html>

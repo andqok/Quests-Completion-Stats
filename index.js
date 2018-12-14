@@ -15,4 +15,6 @@ app.get('/main', function (req, res) {
     res.sendFile(path.join(__dirname + '/data/MainPageInfo.json'))
 })
 
-app.listen(3000)
+app.listen(3000, () => {
+    console.log('listening on 3000')
+})
