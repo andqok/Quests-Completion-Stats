@@ -12,7 +12,41 @@
         </div>
     </body>
     <script type="text/x-template" id="gameinfo-template">
-    <h1 v-if="haveGameInfo">Have game info!</h1>
+    <div v-if="haveGameInfo">
+        <table>
+            <thead>
+                <tr>
+                    <th>Build ID</th>
+                    <th>Platform</th>
+                    <th>Quest Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ gameObj.globalId }}</td>
+                    <td>{{ gameObj.platform }}</td>
+                    <td>{{ gameObj.name }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <h1>Pathways</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Path name</th>
+                    <th>Leaft info</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ gameObj.pathway.status }}</td>
+                    <td>{{ gameObj.pathway.name }}</td>
+                    <td>{{ "good" }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <h1 v-else="haveGameInfo">
         <img src="/img/quest-not-found.png">
     </h1>
@@ -76,17 +110,19 @@
         data() {
             return {
                 haveGameInfo: false,
+                gameObj: {}
             }
         },
         template: '#gameinfo-template',
         created() {
             axios.get('http://localhost:3000/games/' + this.$props.item)
                 .then(response => {
-                    const sampleObj = response.data[0]
-                    if (!sampleObj) {
+                    const gameObj = response.data[0]
+                    if (!gameObj) {
                         this.haveGameInfo = false
                     } else {
                         this.haveGameInfo = true
+                        this.gameObj = gameObj
                     }
                 })
         }
