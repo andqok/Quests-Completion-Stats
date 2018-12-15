@@ -14,21 +14,50 @@ app.get('/', function (req, res) {
 })
 
 app.get('/main', function (req, res) {
-    res.sendFile(path.join(__dirname + '/data/MainPageInfo.json'))
+    res.sendFile(
+        path.join(
+            dataJson`MainPageInfo`
+        )
+    )
 })
 
-app.get('/games/:game', function (req, res) {
+app.get('/games/:game/id/:id', function (req, res) {
     const game = req.params.game
-    
-    fs.readFile( __dirname + '/data/GeneralQuestsInfo.json', 'utf8', (err, data) => {
+    const id = +req.params.id
+
+    fs.readFile( dataJson`GeneralQuestsInfo`, 'utf8', (err, data) => {
         const generalInfo = JSON.parse( data )
-        const relevant = generalInfo.filter(obj => {
-            return obj.alias === game
+
+        fs.readFile( dataJson`FinishedQuestsLeafs`, 'utf8', (err, data) => {
+            const relevantGame = generalInfo.filter(obj => {
+                return obj.alias === game && obj.globalId === id
+            })[0]
+
+            if (relevantGame) {
+                const allLeafs = JSON.parse(data)
+                const relevantLeafs = allLeafs.filter(leaf => {
+                    return leaf.questId === relevantGame.id
+                }).map(leaf => leaf.name)
+    
+                relevantGame.pathway.leafs = relevantGame.pathway.leafs.map(leaf => {
+                    let passed = relevantLeafs.includes(leaf) ? true : false
+                    return {
+                        leaf,
+                        passed
+                    }
+                })
+                res.end(JSON.stringify(relevantGame))
+            } else {
+                res.end('')
+            }
         })
-        res.end(JSON.stringify(relevant))
     })  
 })
 
 app.listen(3000, () => {
     console.log('listening on 3000')
 })
+
+function dataJson(name) {
+    return __dirname + '/data/' + name + '.json'
+}

@@ -5,6 +5,17 @@
         <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
         <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
+        <style>
+        .leaf {
+            display: inline-block;
+        }
+        .leaf > div {
+            display: inline-block;
+        }
+        .arrow {
+            padding-bottom: 6px;
+        }
+        </style>
     </head>
     <body>
         <div id="app">
@@ -42,7 +53,19 @@
                 <tr>
                     <td>{{ gameObj.pathway.status }}</td>
                     <td>{{ gameObj.pathway.name }}</td>
-                    <td>{{ "good" }}</td>
+                    <td>
+                        <ul>
+                            <li v-for="(item, index) in gameObj.pathway.leafs" class="leaf">
+                                <div>
+                                    <img v-if="item.passed === true" src="img/success.jpg">
+                                    <img v-if="item.passed === false" src="img/crash.jpg">
+                                </div>
+                                <div v-if="gameObj.pathway.leafs.length - 1 > index">
+                                    <span class="arrow">→</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -56,19 +79,17 @@
             <thead>
                 <tr>
                     <th v-for="(item, index) in rowAlias" :key="index">
-                        <router-link :to="{ name: 'gameinfo', params: { item } }">
-                            {{ item }}
+                        <router-link :to="{ name: 'gameinfo', params: { item: item.alias, id: item.globalId } }">
+                            {{ item.alias }}
                         </router-link>
                     </th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td is="game-row"
-                        v-for="(item, index) in rowStatus"
-                        v-bind:src="item"
-                        :key="index"
-                    ></td>
+                    <td v-for="(item, index) in rowStatus" :key="index">
+                        <img :src="item">
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -76,12 +97,11 @@
     <script>
     'use strict'
 
-    Vue.component('game-row', {
-        props: ['src'],
-        template: `<td>
-                <img :src="src">
-        </td>`
-    })
+    const statusImages = {
+        SUCCESS: 'success',
+        CRASH: 'crash',
+        NO_DATA: 'no_data'
+    }
 
     const Main = {
         template: '#main-template',
@@ -96,7 +116,7 @@
                 .then(response => {
                     for (let game in response.data) {
                         let obj = response.data[game]
-                        this['rowAlias'].push(obj.alias)
+                        this['rowAlias'].push(obj)
                         this['rowStatus'].push(
                             `/img/${statusImages[obj.status]}.jpg`
                         )
@@ -106,7 +126,7 @@
     }
 
     const GameInfo = {
-        props: ['item'],
+        props: ['item', 'id'],
         data() {
             return {
                 haveGameInfo: false,
@@ -115,9 +135,9 @@
         },
         template: '#gameinfo-template',
         created() {
-            axios.get('http://localhost:3000/games/' + this.$props.item)
+            axios.get(`http://localhost:3000/games/${this.$props.item}/id/${this.$props.id}`)
                 .then(response => {
-                    const gameObj = response.data[0]
+                    const gameObj = response.data
                     if (!gameObj) {
                         this.haveGameInfo = false
                     } else {
@@ -126,12 +146,6 @@
                     }
                 })
         }
-    }
-
-    const statusImages = {
-        SUCCESS: 'success',
-        CRASH: 'crash',
-        NO_DATA: 'no_data'
     }
 
     const routes = [
