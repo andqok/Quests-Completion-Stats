@@ -7,8 +7,16 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
     </head>
     <body>
-        <div id="app"></div>
+        <div id="app">
+            <router-view></router-view>
+        </div>
     </body>
+    <script type="text/x-template" id="gameinfo-template">
+    <h1 v-if="haveGameInfo">Have game info!</h1>
+    <h1 v-else="haveGameInfo">
+        <img src="/img/quest-not-found.png">
+    </h1>
+    </script>
     <script type="text/x-template" id="main-template">
         <table>
             <thead>
@@ -32,6 +40,7 @@
         </table>
     </script>
     <script>
+    'use strict'
 
     Vue.component('game-row', {
         props: ['src'],
@@ -64,7 +73,23 @@
 
     const GameInfo = {
         props: ['item'],
-        template: '<h1>Success! You have chosen {{ item }}</h1>'
+        data() {
+            return {
+                haveGameInfo: false,
+            }
+        },
+        template: '#gameinfo-template',
+        created() {
+            axios.get('http://localhost:3000/games/' + this.$props.item)
+                .then(response => {
+                    const sampleObj = response.data[0]
+                    if (!sampleObj) {
+                        this.haveGameInfo = false
+                    } else {
+                        this.haveGameInfo = true
+                    }
+                })
+        }
     }
 
     const statusImages = {
@@ -90,12 +115,7 @@
     const router = new VueRouter({ routes })
 
     var app = new Vue( {
-        router,
-        template: `
-            <div id="app">
-                <router-view></router-view>
-            </div>
-            `
+        router
     } ).$mount('#app')
 
     </script>
